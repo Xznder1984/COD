@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="data:," />
+  <title>COD AAA FPS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+    #game-canvas { display: block; width: 100%; height: 100%; }
+    #ui-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    #loading {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      color: #ffc800; font-size: 24px; font-weight: 700; letter-spacing: 4px;
+      display: none;
+    }
+    #tier-badge {
+      position: absolute; top: 22px; right: 24px; z-index: 101;
+      font: 11px ui-monospace, Menlo, monospace; letter-spacing: 1.5px;
+      color: #7fe08a; background: rgba(0,0,0,0.55); border: 1px solid rgba(127,224,138,0.3);
+      padding: 4px 10px; border-radius: 3px;
+    }
+    #quality-row {
+      position: absolute; bottom: 34px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 6px; align-items: center; z-index: 101;
+      font: 11px ui-monospace, Menlo, monospace; letter-spacing: 1px; color: #8a8a8a;
+    }
+    #quality-row span { color: #ffc800; }
+    #quality-row button {
+      font: 11px ui-monospace, Menlo, monospace; letter-spacing: 1px;
+      background: rgba(0,0,0,0.5); color: #cfcfcf; border: 1px solid #3a3a3a;
+      padding: 5px 11px; cursor: pointer; pointer-events: all;
+    }
+    #quality-row button:hover { border-color: #ffc800; color: #ffc800; }
+    #quality-row button.active { background: #ffc800; color: #000; border-color: #ffc800; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+  <div id="ui-overlay"></div>
+  <div id="tier-badge">—</div>
+  <div id="loading">LOADING...</div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

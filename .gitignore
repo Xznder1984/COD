@@ -1,0 +1,9 @@
+node_modules
+dist
+shots
+__pycache__
+*.pyc
+*.log
+
+# local session transcripts
+session-*.md
