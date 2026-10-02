@@ -44,6 +44,7 @@ export class ScreenEffects {
     this.baseFov = camera.fov;
     this.targetFov = this.baseFov;
     this.currentFov = this.baseFov;
+    this._fovScale = 1;
     this.fovEasing = 0;
     this.sprintFovKick = 0;
     this._fovDirty = true;
@@ -113,14 +114,14 @@ export class ScreenEffects {
 
   setADS(adsFactor) {
     this.isADS = adsFactor > 0;
-    this.targetFov = this.baseFov * (1.0 - adsFactor * 0.25);
+    this._fovScale = 1.0 - adsFactor * 0.25;
     this.fovEasing = 0;
     this._fovDirty = true;
   }
 
   setSprinting(sprinting) {
     this.sprintFovKick = sprinting ? 5 : 0;
-    this.targetFov = this.baseFov + this.sprintFovKick;
+    this._fovOffset = this.sprintFovKick;
     this.fovEasing = 0;
     this._fovDirty = true;
   }
@@ -244,18 +245,18 @@ export class ScreenEffects {
   }
 
   _updateFOV(dt) {
+    // The Engine owns camera.fov. We only report the sprint kick and an ADS pull;
+    // the Engine combines them with the hip FOV and applies the result once.
     this.fovEasing += dt * 8;
     if (this.fovEasing > 1.0) this.fovEasing = 1.0;
 
-    const target = this.targetFov - this.baseFov;
-    const inv = 1.0 - this.fovEasing;
-    const eased = 1.0 - inv * inv * inv;
-    this.currentFov = this.baseFov + target * eased;
-
-    if (Math.abs(this.currentFov - this.camera.fov) > 0.01) {
-      this.camera.fov = this.currentFov;
-      this.camera.updateProjectionMatrix();
-    }
+    const hip = (this.engine && typeof this.engine.getHipFov === 'function')
+      ? this.engine.getHipFov()
+      : this.baseFov;
+    this.baseFov = hip;
+    this._fovOffset = this._fovOffset || 0;
+    this._fovScale = this._fovScale || 1;
+    this.currentFov = hip * this._fovScale + this._fovOffset;
   }
 
   _updateBreathing() {

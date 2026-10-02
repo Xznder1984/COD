@@ -11,7 +11,8 @@
     "soak": "node tools/soak.mjs",
     "shots": "node tools/screenshots.mjs",
     "serve:mp": "node server/index.js",
-    "mptest": "node tools/mptest.mjs"
+    "mptest": "node tools/mptest.mjs",
+    "settings": "node tools/settingstest.mjs"
   },
   "dependencies": {
     "three": "^0.170.0",

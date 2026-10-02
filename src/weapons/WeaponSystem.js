@@ -48,7 +48,8 @@ const WEAPON_STATS = {
 };
 
 export class WeaponSystem {
-  constructor(scene, camera, physics, input, assetFactory, audio, quality) {
+  constructor(scene, camera, physics, input, assetFactory, audio, quality, engine) {
+    this.engine = engine || null;
     this.scene = scene;
     this.camera = camera;
     this.physics = physics;
@@ -103,6 +104,8 @@ export class WeaponSystem {
     }
     this._equipModel(this.currentType);
 
+    // ADS narrows the FOV; the hip-fire value comes from the engine so a settings
+    // change is respected instead of being overwritten every frame.
     this.baseFov = camera.fov;
     this.currentFov = this.baseFov;
     this.recoilPitch = 0;
@@ -372,13 +375,13 @@ export class WeaponSystem {
 
     this._cameraShake = Math.max(0, this._cameraShake - dt * 3);
 
-    const targetFov = this.isAds ? stats.adsFov : this.baseFov;
-    const prevFov = this.currentFov;
-    this.currentFov += (targetFov - this.currentFov) * Math.min(dt * 12, 1);
-    if (this.currentFov !== prevFov) {
-      this.camera.fov = this.currentFov;
-      this.camera.updateProjectionMatrix();
-    }
+    // ADS narrows the FOV. The Engine resolves the final value from the hip FOV plus
+    // whatever modifiers register, so we never write camera.fov directly.
+    const adsScale = stats.adsFov / 78;
+    const targetScale = this.isAds ? adsScale : 1;
+    const prevScale = this.adsScale === undefined ? 1 : this.adsScale;
+    this.adsScale = prevScale + (targetScale - prevScale) * Math.min(dt * 12, 1);
+    this._adsScale = this.adsScale;
 
     this.camera.rotation.x += this.recoilPitch * recoilScale * 0.35;
     this.camera.rotation.y += this.recoilYaw * recoilScale * 0.35;

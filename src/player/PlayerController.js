@@ -9,7 +9,6 @@ const GRAVITY = -18;
 const STANDING_HEIGHT = 1.7;
 const CROUCHING_HEIGHT = 1.0;
 const SLIDE_HEIGHT = 0.6;
-const MOUSE_SENSITIVITY = 0.002;
 const PITCH_LIMIT = Math.PI / 2 - 0.05;
 const LEAN_ANGLE = 0.10;
 const LEAN_OFFSET = 0.28;
@@ -131,9 +130,11 @@ export class PlayerController {
   }
 
   _handleMouseLook() {
+    // Sensitivity is applied once, in Input.consumeMouseDelta. It used to be scaled
+    // a second time here, which made the effective sensitivity 0.002^2 (~500x too slow).
     const { dx, dy } = this.input.consumeMouseDelta();
-    this.yaw -= dx * MOUSE_SENSITIVITY;
-    this.pitch -= dy * MOUSE_SENSITIVITY;
+    this.yaw -= dx;
+    this.pitch -= dy;
     this.pitch = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, this.pitch));
   }
 

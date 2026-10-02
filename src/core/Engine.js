@@ -107,6 +107,9 @@ export class Engine {
     this.camera.position.set(0, 1.7, 0);
     this.scene.add(this.camera);
     this.baseFov = 78;
+    this._hipFov = 78;
+    this._fovScale = 1;
+    this._fovOffset = 0;
 
     this.clock = new THREE.Clock();
     this.deltaTime = 0;
@@ -297,6 +300,40 @@ export class Engine {
     }
   }
 
+  setFov(deg) {
+    const d = Math.max(40, Math.min(130, Number(deg) || 78));
+    this._hipFov = d;
+    if (Math.abs(d - this.camera.fov) < 0.01) return;
+    this.camera.fov = d;
+    this.camera.updateProjectionMatrix();
+  }
+
+  /** The hip-fire field of view, which modifiers scale away from. */
+  getHipFov() {
+    return this._hipFov || this.baseFov;
+  }
+
+  /**
+   * Single owner of camera.fov. Systems register modifiers rather than writing the
+   * camera directly, so three of them can no longer fight over the same value.
+   *   scale  - multiplier applied while aiming (1 = hip fire)
+   *   offset - additive degrees, e.g. the sprint speed kick
+   */
+  setFovModifiers(scale, offset) {
+    this._fovScale = scale;
+    this._fovOffset = offset;
+  }
+
+  _resolveFov() {
+    const hip = this.getHipFov();
+    const scale = this._fovScale || 1;
+    const offset = this._fovOffset || 0;
+    const desired = Math.max(40, Math.min(130, hip * scale + offset));
+    if (Math.abs(desired - this.camera.fov) < 0.005) return;
+    this.camera.fov = desired;
+    this.camera.updateProjectionMatrix();
+  }
+
   setExposure(v) {
     if (this.gradePass && this.gradePass.uniforms) {
       this.gradePass.uniforms.exposure.value = this._baseExposure * v;
@@ -320,6 +357,7 @@ export class Engine {
 
     this.renderer.info.reset();
     this.perf.recordFrame(dt);
+    this._resolveFov();
 
     const s = this.perf.settings;
     this._shadowTimer += dt;

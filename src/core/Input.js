@@ -6,7 +6,8 @@ export class Input {
     this.mouse = { x: 0, y: 0, dx: 0, dy: 0, buttons: [false, false, false] };
     this._mouseJustPressed = [false, false, false];
     this.isPointerLocked = false;
-    this.sensitivity = 0.002;
+    this.sensitivity = 0.0022;
+    this.sensitivityScale = 1.0;
     this.invertY = false;
 
     this._onKeyDown = (e) => {
@@ -51,9 +52,14 @@ export class Input {
   wasPressed(code) { return this._justPressed.has(code); }
   wasMousePressed(button = 0) { return this._mouseJustPressed[button]; }
 
+  setSensitivityScale(scale) {
+    this.sensitivityScale = Math.max(0.05, Math.min(20, Number(scale) || 1));
+  }
+
   consumeMouseDelta() {
-    const dx = this.mouse.dx * this.sensitivity;
-    const dy = this.mouse.dy * this.sensitivity * (this.invertY ? -1 : 1);
+    const s = this.sensitivity * this.sensitivityScale;
+    const dx = this.mouse.dx * s;
+    const dy = this.mouse.dy * s * (this.invertY ? -1 : 1);
     this.mouse.dx = 0;
     this.mouse.dy = 0;
     return { dx, dy };

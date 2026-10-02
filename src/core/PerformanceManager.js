@@ -136,6 +136,8 @@ export class PerformanceManager {
     this.minFps = 24;
     this.currentFps = 60;
     this.adaptiveScale = 1.0;
+    this._manualScale = 1.0;
+    this.adaptive = true;
     this.minScale = 0.55;
     this.maxScale = 1.0;
     this.enabled = true;
@@ -252,6 +254,14 @@ export class PerformanceManager {
     return false;
   }
 
+  /** Manual render-scale override from the settings panel (1 = as the tier dictates). */
+  setRenderScale(scale) {
+    const v = Math.max(0.5, Math.min(1, Number(scale) || 1));
+    if (Math.abs(v - this._manualScale) < 0.001) return;
+    this._manualScale = v;
+    this._onScaleChange();
+  }
+
   setTargetFps(fps) {
     this.targetFps = fps;
   }
@@ -268,7 +278,7 @@ export class PerformanceManager {
     const avg = sum / this.frameSamples.length;
     this.currentFps = 1 / avg;
 
-    if (!this.enabled) return;
+    if (!this.enabled || !this.adaptive) return;
     if (this.frameSamples.length < 8) return;
 
     this._cooldown -= dt;
@@ -313,7 +323,8 @@ export class PerformanceManager {
 
   getEffectivePixelRatio() {
     const dpr = Math.min(window.devicePixelRatio || 1, this.settings.maxPixelRatio);
-    return dpr * this.settings.renderScale * this.adaptiveScale;
+    const adaptive = this.adaptive ? this.adaptiveScale : 1.0;
+    return dpr * this.settings.renderScale * adaptive * this._manualScale;
   }
 
   getRenderWidth() {

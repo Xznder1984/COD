@@ -73,7 +73,26 @@ reachable before you commit to joining.
 | `1` `2` `3` `4` | Rifle / SMG / Sniper / Pistol |
 | Mouse wheel | Cycle weapon |
 | `P` | Cycle quality tier |
-| `Esc` | Pause |
+| `Esc` | Settings |
+
+## Settings
+
+Press `Esc` (or the gear icon) at any time. Everything applies live and saves
+automatically to your browser.
+
+| Setting | Range | Notes |
+| --- | --- | --- |
+| Mouse sensitivity | 0.1 – 5.0 | Multiplier on top of the base |
+| Invert vertical | on/off | |
+| Quality preset | Auto / Potato – Ultra | Auto picks from your GPU and adapts |
+| Render scale | 0.5 – 1.0 | Internal resolution multiplier |
+| Adaptive resolution | on/off | Drop resolution to hold framerate |
+| Field of view | 60 – 110 | ADS zoom scales proportionally |
+| Show performance stats | on/off | The overlay at the top |
+| Master volume | 0 – 1 | |
+
+If the game still feels sluggish, drop **Quality preset** to Potato and turn **Adaptive
+resolution** on — that is the combination that survives integrated graphics.
 
 ## Rendering
 
@@ -113,8 +132,10 @@ the actual render loop, input handling and game state rather than mocking them.
 npm run dev            # in one terminal
 
 npm run verify         # 19 functional checks: movement, weapons, ADS, reload,
-                       # death/redeploy, pause, quality tiers. Exits non-zero on failure.
+                       # death/redeploy, pause, quality tiers
 npm run soak           # sustained combat: fps range, wave progress, heap drift
+npm run settings       # 14 checks: every setting applies, persists and resets
+npm run mptest         # 16 multiplayer checks (needs a server: npm run serve:mp)
 npm run shots          # screenshots from 8 viewpoints into shots/
 ```
 

@@ -22,6 +22,7 @@ import { KillFeed } from './ui/KillFeed.js';
 import { Minimap } from './ui/Minimap.js';
 import { Menus } from './ui/Menus.js';
 import { Lobby, describeConnectivity } from './ui/Lobby.js';
+import { Settings } from './ui/Settings.js';
 import { Network, defaultServerUrl, probeServer } from './net/Network.js';
 import { NetGame } from './net/NetGame.js';
 
@@ -66,7 +67,7 @@ class Game {
 
     this.weaponSystem = new WeaponSystem(
       this.engine.scene, this.engine.camera, this.physics,
-      this.input, this.assetFactory, this.audio, q
+      this.input, this.assetFactory, this.audio, q, this.engine
     );
 
     this.enemyManager = new EnemyManager(
@@ -78,6 +79,7 @@ class Game {
     this.netGame = new NetGame(this.engine.scene, this.enemyManager.models, this.assetFactory);
     this.netGame.addRoot(this.engine.scene);
     this.lobby = new Lobby(this.uiOverlay);
+    this.settings = new Settings(this.uiOverlay);
 
     this.hud = new HUD(this.uiOverlay, q);
     this.killFeed = new KillFeed(this.uiOverlay, q);
@@ -103,7 +105,9 @@ class Game {
 
     this.spawnPoint = this._findFreeSpawn();
 
+    this._buildSettingsButton();
     this._buildPerfOverlay();
+    this._setupSettings();
     this._setupNetplay();
     this._setupCallbacks();
     this._setupMenuHandlers();
@@ -349,6 +353,61 @@ class Game {
     this._startGame();
   }
 
+  _buildSettingsButton() {
+    const gear = document.createElement('button');
+    gear.id = 'settings-gear';
+    gear.title = 'Settings (Esc)';
+    gear.setAttribute('aria-label', 'Settings');
+    gear.style.cssText = 'position:absolute;top:8px;right:10px;z-index:70;width:26px;height:26px;padding:0;pointer-events:auto;cursor:pointer;background:rgba(0,0,0,.42);border:1px solid #2a3242;color:#9aa5b4;font-size:13px;line-height:1;border-radius:2px;display:flex;align-items:center;justify-content:center;';
+    gear.textContent = '\u2699';
+    gear.onclick = () => this._openSettings();
+    this.uiOverlay.appendChild(gear);
+    this.gearButton = gear;
+  }
+
+  _openSettings() {
+    this.input.exitPointerLock();
+    this.gameState = 'paused';
+    this.menus.hideAll();
+    this.settings.show();
+  }
+
+  _setupSettings() {
+    this.settings.onChange = () => this._applySettings();
+    this.settings.onClose = () => this._resumeFromSettings();
+    this._applySettings();
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code !== 'Escape') return;
+      if (this.settings.open) {
+        e.preventDefault();
+        this.settings.toggle();
+      } else if (this.gameState === 'playing') {
+        e.preventDefault();
+        this._openSettings();
+      }
+    });
+  }
+
+  _resumeFromSettings() {
+    if (this.gameState === 'dead') return;
+    this.gameState = 'playing';
+    this.input.requestPointerLock();
+  }
+
+  _applySettings() {
+    this.settings.apply({
+      input: this.input,
+      perf: this.perf,
+      engine: this.engine,
+      audio: this.audio,
+      overlay: this.perfOverlay,
+    });
+    if (this.settings.values.quality !== 'auto') {
+      this._applyQualityToModules();
+    }
+  }
+
   _setupNetplay() {
     const conn = describeConnectivity();
     this.lobby.setNetwork(conn.state, conn.detail);
@@ -539,6 +598,11 @@ class Game {
     this.screenEffects.update(dt, this.playerHealth.getHealth(), this.playerHealth.getMaxHealth());
 
     if (this.weaponSystem.currentModel) this.engine.registerViewmodel(this.weaponSystem.currentModel);
+    // Combine the two FOV modifiers; the Engine applies the single result.
+    this.engine.setFovModifiers(
+      this.weaponSystem._adsScale || 1,
+      (this.screenEffects._fovOffset || 0) + (this.weaponSystem._cameraShake || 0)
+    );
     this.engine.setDamageIntensity(this.screenEffects.getDamageIntensity());
     this.input.resetFrame();
     this.engine.render();
