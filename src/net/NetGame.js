@@ -18,6 +18,7 @@ export class NetGame {
     this.enemies = new Map();
     this.remotePlayers = new Map();
     this.time = 0;
+    this._seen = new Set();
   }
 
   addRoot(scene) {
@@ -63,7 +64,8 @@ export class NetGame {
   /** Reconcile against a snapshot list, then ease everyone toward it. */
   update(dt, list) {
     this.time += dt;
-    const seen = new Set();
+    const seen = this._seen;
+    seen.clear();
 
     for (const e of list) {
       seen.add(e.id);

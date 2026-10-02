@@ -29,6 +29,8 @@ export class Network {
     this._sendTimer = 0;
     this._pingTimer = 0;
     this._pingSent = 0;
+    this._seenIds = new Set();
+    this._seenScratch = [];
     this._onWelcome = null;
     this._onSnapshot = null;
     this._onEvent = null;
@@ -160,9 +162,13 @@ export class Network {
       e.kills = p.kills;
       e.deaths = p.deaths;
     }
-    for (const id of [...this.players.keys()]) {
-      if (!m.players.some((p) => p.id === id)) this.players.delete(id);
+    this._seenIds.clear();
+    for (const p of m.players) this._seenIds.add(p.id);
+    this._seenScratch.length = 0;
+    for (const id of this.players.keys()) {
+      if (!this._seenIds.has(id)) this._seenScratch.push(id);
     }
+    for (let i = 0; i < this._seenScratch.length; i++) this.players.delete(this._seenScratch[i]);
 
     this.enemyBuffer.push({ t: m.time, list: m.enemies });
     if (this.enemyBuffer.length > 12) this.enemyBuffer.shift();

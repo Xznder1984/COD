@@ -5,35 +5,57 @@ urban combat zone.
 
 ## Running
 
-The easy way:
-
 ```bash
-python3 run.py
+npm install     # once
+python3 run.py  # single player
+python3 run.py --mp   # host multiplayer
 ```
 
-That installs anything missing, approves the npm install scripts Vite needs, starts the
-server and opens the game in your browser. It also picks a free port if 3000 is taken.
+`run.py` installs anything missing, approves the npm install scripts Vite needs, starts
+the server and opens your browser. If 3000 is taken it walks up to the next free port.
 
-```
-python3 run.py              dev server + browser
-python3 run.py --build      production build, then serve it
-python3 run.py --port 8080  use a specific port
-python3 run.py --no-open    don't launch a browser
-python3 run.py --verify     run the functional test suite
-python3 run.py --soak       run the stability soak test
-```
+With `--mp` it builds the client, starts the authoritative server on port 8080 and
+prints a LAN address you can hand to other people on the same network.
 
 If you'd rather use npm directly:
 
 ```bash
-npm install
-npm run dev      # http://localhost:3000
-npm run build && npm run preview
+npm run dev      # single player,  http://localhost:3000
+npm run build
+npm run serve:mp # multiplayer,   http://localhost:8080
 ```
 
-> **If `npm run dev` fails with "esbuild not found"**, npm 11+ blocks dependency
-> lifecycle scripts by default, and esbuild's postinstall is what fetches the binary Vite
-> runs on. Fix with `npm install-scripts approve --all`. `run.py` does this for you.
+> **If Vite fails with "esbuild not found"**, npm 11+ blocks dependency lifecycle scripts
+> by default, and esbuild's postinstall is what fetches the binary Vite runs on. Fix with
+> `npm install-scripts approve --all`. `run.py` does this for you.
+
+> **No internet needed.** Everything is bundled and generated at runtime. There are no
+> external fonts, CDNs or asset downloads, so single player works fully offline.
+
+## Multiplayer
+
+The server is authoritative: it owns the enemies, the wave director, damage and
+scoring. Clients send their transform and fire requests; the server decides what was
+actually hit, so players can't disagree about a kill.
+
+```
+You  ──transform @20Hz──▶  ┌──────────────┐
+You  ──fire request─────▶  │  Node server │  enemies, waves,
+You  ◀──snapshot @10Hz───  │  (authoritative) damage, scores
+You  ◀──events──────────  └──────────────┘
+```
+
+- Up to 8 players
+- Enemies navigate a shared nav grid with A*, so they path around buildings
+- Bullets are resolved server-side; walls block them, heads do 2x damage
+- Clients interpolate snapshots, so a 10Hz feed still looks smooth
+
+`src/shared/mapdata.js` holds the map layout and is imported by both the client and the
+server, so collision and navigation can't drift out of sync.
+
+**Running a dedicated host?** `npm run serve:mp` binds `0.0.0.0:8080`. Port-forward it
+for play over the internet, or use a tunnel. The lobby shows whether a server is
+reachable before you commit to joining.
 
 ## Controls
 
